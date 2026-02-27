@@ -10,7 +10,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,  // chỉ lấy các field đã khai báo trong validation -> các trường khác ngoài validation sẽ bỏ qua
-    forbidNonWhitelisted: true, 
+    // forbidNonWhitelisted: true, 
   }));
   app.setGlobalPrefix('api/v1', { exclude: [''] }); //set prefix route cho các route 'api/v1' và exclude route '/' không áp dụng prefix
 
