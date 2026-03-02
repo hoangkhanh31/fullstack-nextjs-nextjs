@@ -7,6 +7,9 @@ import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { hashPasswordHelper } from '@/helpers/helper';
 import aqp from 'api-query-params';
+import dayjs from 'dayjs';
+import { v4 as uuidv4 } from 'uuid';
+import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -65,7 +68,7 @@ export class UsersService {
     return `This action returns a #${id} user`;
   }
 
-  async findByEmail (email: string) {
+  async findByEmail(email: string) {
     return await this.userModel.findOne({ email: email });
   }
 
@@ -82,5 +85,28 @@ export class UsersService {
     }
 
     return await this.userModel.deleteOne({ _id: id });
+  }
+
+  async register(createAuthDto: CreateAuthDto) {
+    const { email, password, name } = createAuthDto;
+
+    //check email
+    const isExist = await this.isEmailExist(email);
+    if (isExist) {
+      throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng sử dụng email khác`);
+    }
+
+    //hash password
+    const hashPassword = await hashPasswordHelper(password);
+    const user = await this.userModel.create({
+      name, email, password: hashPassword,
+      isActive: false, //user should active account by email verification before login
+      codeId: uuidv4(), //code for email verification
+      codeExpired: dayjs().add(24, 'hours'), //code expired after 24h
+    })
+
+    return {
+      _id: user._id
+    }
   }
 }
