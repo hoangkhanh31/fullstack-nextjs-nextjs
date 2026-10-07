@@ -98,15 +98,19 @@ export class UsersService {
 
     //hash password
     const hashPassword = await hashPasswordHelper(password);
+    const codeId = uuidv4();
     const user = await this.userModel.create({
       name, email, password: hashPassword,
       isActive: false, //user should active account by email verification before login
-      codeId: uuidv4(), //code for email verification
-      codeExpired: dayjs().add(24, 'hours'), //code expired after 24h
+      codeId: codeId, //code for email verification
+      codeExpired: dayjs().add(5, 'minutes'), //code expired after 5 minutes
     })
 
     return {
-      _id: user._id
+      _id: user._id,
+      name: name,
+      email: email,
+      codeId: codeId,
     }
   }
 }

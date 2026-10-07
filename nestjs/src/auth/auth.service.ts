@@ -1,12 +1,16 @@
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '@/modules/users/users.service';
 import { comparePasswordHelper } from '@/helpers/helper';
 import { JwtService } from '@nestjs/jwt';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService, private jwtService: JwtService) { }
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+    private mailerService: MailerService,
+  ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(username);
@@ -26,6 +30,18 @@ export class AuthService {
   }
 
   async register(createAuthDto) {
-    return this.usersService.register(createAuthDto);
+    const user = await this.usersService.register(createAuthDto);
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Activate your account',
+      template: 'register',
+      context: {
+        name: user.name || user.email,
+        activationCode: user.codeId,
+      },
+    });
+
+    return user;
   }
 }
